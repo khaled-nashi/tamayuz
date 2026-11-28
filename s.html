@@ -10,7 +10,7 @@ body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;b
 input,select{width:100%;box-sizing:border-box;padding:12px;border:1px solid #cfd8e3;border-radius:12px;font:inherit}
 .o{display:block;border:2px solid #dbe3ec;border-radius:12px;padding:10px 12px;margin:8px 0;cursor:pointer}
 .o.on{border-color:#2f8f3a;background:#eef8ee}
-.q b{display:block;margin-bottom:4px}
+.q b{display:block;margin-bottom:4px}.ta{width:100%;box-sizing:border-box;min-height:80px;border:2px solid #dbe3ec;border-radius:12px;padding:10px;font:inherit}
 .yn{display:flex;gap:8px}.yn .o{flex:1;text-align:center;margin:6px 0}
 button.go{width:100%;border:0;border-radius:12px;background:#2f8f3a;color:#fff;font:inherit;font-weight:700;padding:14px;font-size:18px;cursor:pointer}
 button.go:disabled{opacity:.6}
@@ -36,12 +36,13 @@ function draw() {
   var h = '<div class="card"><b>اسمك</b>' + (DEF.names && DEF.names.length ? '<select id="nm"><option value="">-- اختر اسمك --</option>' + DEF.names.map(function (n) { return '<option>' + esc(n) + '</option>'; }).join('') + '</select>' : '<input id="nm" placeholder="اكتب اسمك الثلاثي">') + '</div>';
   if (sty) h += '<div class="card" style="background:#fffbea">اقرأ كل عبارة واختر «نعم» إذا كانت تنطبق عليك، و«لا» إذا لم تنطبق.</div>';
   h += DEF.qs.map(function (q, i) {
-    return '<div class="card q"><b>' + ar(i + 1) + ') ' + esc(q.q) + '</b>' + (sty ? '<div class="yn"><label class="o" data-q="' + i + '" data-v="1">نعم</label><label class="o" data-q="' + i + '" data-v="0">لا</label></div>' : q.o.map(function (o, k) { return '<label class="o" data-q="' + i + '" data-v="' + k + '">' + esc(o) + '</label>'; }).join('')) + '</div>';
+    return '<div class="card q"><b>' + ar(i + 1) + ') ' + esc(q.q) + '</b>' + (sty ? '<div class="yn"><label class="o" data-q="' + i + '" data-v="1">نعم</label><label class="o" data-q="' + i + '" data-v="0">لا</label></div>' : (q.o && q.o.length ? q.o.map(function (o, k) { return '<label class="o" data-q="' + i + '" data-v="' + k + '">' + esc(o) + '</label>'; }).join('') : '<textarea class="ta" data-t="' + i + '" placeholder="اكتب إجابتك هنا"></textarea>')) + '</div>';
   }).join('');
   h += '<div class="card"><div id="pr"></div><div class="bar"><i id="pb" style="width:0"></i></div><br><button class="go" id="send">إرسال الإجابات</button></div>';
   $('app').innerHTML = h;
   var prog = function () { var n = ANS.filter(function (x) { return x != null; }).length; $('pr').textContent = 'أجبت ' + ar(n) + ' من ' + ar(DEF.qs.length); $('pb').style.width = (n / DEF.qs.length * 100) + '%'; };
   ANS = DEF.qs.map(function () { return null; }); prog();
+  document.querySelectorAll('.ta').forEach(function (t) { t.oninput = function () { ANS[+t.dataset.t] = t.value.trim() || null; prog(); }; });
   document.querySelectorAll('.o').forEach(function (el) { el.onclick = function () { var i = +el.dataset.q; ANS[i] = +el.dataset.v; document.querySelectorAll('.o[data-q="' + i + '"]').forEach(function (x) { x.classList.toggle('on', x === el); }); prog(); }; });
   $('send').onclick = function () {
     var nm = $('nm').value.trim(); if (!nm) { alert('اكتب اسمك أولاً'); $('nm').focus(); return; }
