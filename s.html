@@ -24,9 +24,12 @@ var P = new URLSearchParams(location.search), D = P.get('d'), TID = P.get('t'), 
 var ar = function (n) { return String(n).replace(/\d/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'[d]; }); };
 var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
 var $ = function (i) { return document.getElementById(i); };
+function jsonp(url) { return new Promise(function (res, rej) { var cb = '__g' + Date.now() + Math.floor(Math.random() * 1e4), s = document.createElement('script'), t; function done() { clearTimeout(t); delete window[cb]; s.remove(); } t = setTimeout(function () { done(); rej(); }, 25000); window[cb] = function (j) { done(); res(j); }; s.onerror = function () { done(); rej(); }; s.src = url + '&cb=' + cb; document.head.appendChild(s); }); }
+function get(q) { return fetch(U + '?' + q).then(function (r) { return r.json(); }).catch(function () { return jsonp(U + '?' + q); }); }
+function post(b) { var s = JSON.stringify(b); return fetch(U, { method: 'POST', body: s }).then(function (r) { return r.json(); }).catch(function () { return jsonp(U + '?a=post&b=' + encodeURIComponent(s)); }); }
 function fail(m) { $('app').innerHTML = '<div class="card msg err">' + esc(m) + '</div>'; $('su').textContent = ''; }
 if (!D || !TID) fail('الرابط ناقص. اطلب من معلمك الرابط مرة ثانية.');
-else fetch(U + '?a=test&t=' + encodeURIComponent(TID)).then(function (r) { return r.json(); }).then(function (j) { if (!j.ok) return fail(j.err || 'تعذر فتح الاختبار'); DEF = j.def; draw(); }).catch(function () { fail('تعذر الاتصال. تأكد من الإنترنت ثم أعد فتح الرابط.'); });
+else get('a=test&t=' + encodeURIComponent(TID)).then(function (j) { if (!j.ok) return fail(j.err || 'تعذر فتح الاختبار'); DEF = j.def; draw(); }).catch(function () { fail('تعذر الاتصال. تأكد من الإنترنت ثم أعد فتح الرابط.'); });
 function draw() {
   var sty = DEF.kind === 'sty';
   $('ti').textContent = DEF.title; $('su').textContent = [DEF.subj, DEF.cls].filter(Boolean).join(' • ');
@@ -44,7 +47,7 @@ function draw() {
     var nm = $('nm').value.trim(); if (!nm) { alert('اكتب اسمك أولاً'); $('nm').focus(); return; }
     var miss = ANS.indexOf(null); if (miss >= 0 && !confirm('لم تجب على ' + ar(ANS.filter(function (x) { return x == null; }).length) + ' سؤال. هل تريد الإرسال؟')) return;
     var b = this; b.disabled = true; b.textContent = 'جاري الإرسال…';
-    fetch(U, { method: 'POST', body: JSON.stringify({ a: 'submit', t: TID, name: nm, ans: ANS }) }).then(function (r) { return r.json(); }).then(function (j) {
+    post({ a: 'submit', t: TID, name: nm, ans: ANS }).then(function (j) {
       if (!j.ok) { b.disabled = false; b.textContent = 'إرسال الإجابات'; return alert(j.err || 'تعذر الإرسال'); }
       $('app').innerHTML = '<div class="card msg"><div style="font-size:54px">✅</div><b>تم إرسال إجاباتك بنجاح</b><br>شكراً ' + esc(nm) + (j.score != null ? '<br><br>درجتك: <b>' + ar(j.score) + ' من ' + ar(j.total) + '</b>' : '') + '</div>';
     }).catch(function () { b.disabled = false; b.textContent = 'إرسال الإجابات'; alert('تعذر الإرسال. تأكد من الإنترنت وحاول مرة ثانية.'); });
