@@ -42537,8 +42537,8 @@ function renderAdmin() {
   const ok = sessionStorageOk() && sessionStorage.getItem('tmz-admin') === '1';
   if (!ok) {
     $('app').innerHTML = `<div class="login"><div class="card"><h2>صفحة الإدارة</h2>
-      <label class="f"><span>كلمة المرور</span><input type="password" id="aPw"></label><button class="btn p big" id="aGo">دخول</button><div id="aMsg"></div></div></div>`;
-    $('aGo').onclick = () => { if (fnv($('aPw').value) === ADMIN_HASH) { try { sessionStorage.setItem('tmz-admin', '1'); } catch (e) {} renderAdminPanel(); } else $('aMsg').innerHTML = '<div class="msg e">كلمة المرور غير صحيحة.</div>'; };
+      <label class="f"><span>كلمة المرور</span><input type="password" id="aPw" autocapitalize="off" autocorrect="off" autocomplete="current-password" spellcheck="false" dir="ltr"></label><button class="btn p big" id="aGo">دخول</button><div id="aMsg"></div></div></div>`;
+    $('aGo').onclick = () => { if (fnv($('aPw').value.trim()) === ADMIN_HASH) { try { sessionStorage.setItem('tmz-admin', '1'); } catch (e) {} renderAdminPanel(); } else $('aMsg').innerHTML = '<div class="msg e">كلمة المرور غير صحيحة.</div>'; };
     return;
   }
   renderAdminPanel();
